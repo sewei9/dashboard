@@ -1,4 +1,4 @@
-# Stage 1: Build React App
+# Stage 1: Build React App (Unchanged)
 FROM node:18 AS builder
 
 WORKDIR /app
@@ -12,34 +12,38 @@ COPY . ./
 
 RUN npm run build
 
-# Stage 2: Serve React App and Run Backend
-FROM node:18
+# Stage 2: Compile TypeScript Backend
+FROM node:18 AS backend-builder
 
-WORKDIR /app
+WORKDIR /backend
 
-COPY package*.json ./
+COPY backend/package*.json ./
 
-RUN npm install --only=prod
-
-# Copy the built React app to the dist directory
-COPY --from=builder /app/dist /app/dist
-
-# Copy backend source files and install dependencies
-COPY backend ./backend
-WORKDIR /app/backend
 RUN npm install
-RUN npm install --only=dev
 
-# Compile TypeScript to JavaScript
+COPY backend/ ./
+
 RUN npx tsc
 
-# Copy the assets directory to the appropriate location
-COPY --from=builder /app/src/assets /app/dist/assets
+# Stage 3: Serve React App and Run Backend with Nginx
+FROM nginx:alpine
 
-# Copy the index.html to the appropriate location
-COPY --from=builder /app/index.html /app/dist/index.html
+# Copy the built React app to the Nginx serve directory
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy the compiled backend and node_modules
+COPY --from=backend-builder /backend /app/backend
+
+# Install Node.js and npm in the final stage to run the backend
+RUN apk add --update nodejs npm
+
+# Copy Nginx configuration (assuming you have an nginx.conf prepared)
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Copy a script to start both Nginx and the backend server using pm2
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
 
 EXPOSE 8080
 
-# Run the compiled server.js
-CMD ["node", "dist/server.js"]
+CMD ["/start.sh"]

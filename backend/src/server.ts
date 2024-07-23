@@ -16,7 +16,7 @@ console.log('Tenant ID:', tenantId);
 console.log('Redirect URI:', redirectUri);
 
 const corsOptions = {
-  origin: 'http://localhost:5173',
+  origin: 'http://localhost:8080',
   optionsSuccessStatus: 200,
 };
 
@@ -37,11 +37,11 @@ app.get('/api/auth-config', (_req: Request, res: Response) => {
 });
 
 // For any other requests, send back the index.html file from the dist directory
-app.get('*', (req, res) => {
+app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, '../../dist/index.html'));
 });
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

@@ -12,10 +12,8 @@ export const fetchConfig = async (): Promise<Configuration> => {
 
   msalConfig = {
     auth: {
-      clientId: config.clientId || 'd4790e58-c1a7-43d4-864a-dcc3c0ce4315',
-      authority:
-        config.tenantId ||
-        'https://login.microsoftonline.com/720b637a-655a-40cf-816a-f22f40755c2c',
+      clientId: config.clientId,
+      authority: config.tenantId,
       redirectUri: dynamicRedirectUri,
     },
     cache: {
