@@ -22,9 +22,8 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-app.use(express.static(path.join(__dirname, '../../dist')));
+app.use(express.static(path.join(__dirname, 'dist')));
 
-app.use('/assets', express.static(path.join(__dirname, '../../dist/assets')));
 
 app.get('/api/auth-config', (_req: Request, res: Response) => {
   res.json({
@@ -34,10 +33,6 @@ app.get('/api/auth-config', (_req: Request, res: Response) => {
   });
 });
 
-
-app.get('*', (_req, res) => {
-  res.sendFile(path.join(__dirname, '../../dist/index.html'));
-});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
