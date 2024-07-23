@@ -1,45 +1,45 @@
-# Stage 1: Build the frontend
-FROM node:16-alpine as build-frontend
+# Stage 1: Build React App
+FROM node:18 AS builder
 
 WORKDIR /app
 
-# Copy frontend dependencies and install
-COPY package.json package-lock.json ./
+COPY package*.json ./
+COPY vite.config.ts ./
+
 RUN npm install
 
-# Copy frontend source code and build
-COPY . .
+COPY . ./
+
 RUN npm run build
 
-# Stage 2: Setup backend and install dependencies
-FROM node:16-alpine as build-backend
+# Stage 2: Serve React App and Run Backend
+FROM node:18
 
 WORKDIR /app
 
-# Copy backend dependencies and install
-COPY backend/package.json backend/package-lock.json ./backend/
-RUN cd backend && npm install
+COPY package*.json ./
 
-# Copy backend source code
+RUN npm install --only=prod
+
+# Copy the built React app to the dist directory
+COPY --from=builder /app/dist /app/dist
+
+# Copy backend source files and install dependencies
 COPY backend ./backend
+WORKDIR /app/backend
+RUN npm install
+RUN npm install --only=dev
 
-# Copy built frontend to the backend public directory
-COPY --from=build-frontend /app/dist ./backend/public
+# Compile TypeScript to JavaScript
+RUN npx tsc
 
-# Stage 3: Setup Nginx and run the application
-FROM nginx:alpine
+# Copy the assets directory to the appropriate location
+COPY --from=builder /app/src/assets /app/dist/assets
 
-# Remove default Nginx configuration
-RUN rm /etc/nginx/conf.d/default.conf
+# Copy the index.html to the appropriate location
+COPY --from=builder /app/index.html /app/dist/index.html
 
-# Copy custom Nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/
-
-# Copy backend build files
-COPY --from=build-backend /app/backend /app
-
-# Expose port 8080 for Cloud Run
 EXPOSE 8080
 
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Run the compiled server.js
+CMD ["node", "dist/server.js"]
