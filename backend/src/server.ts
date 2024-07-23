@@ -22,10 +22,8 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Serve static files from the dist directory
 app.use(express.static(path.join(__dirname, '../../dist')));
 
-// Serve assets from the src/assets directory
 app.use('/assets', express.static(path.join(__dirname, '../../dist/assets')));
 
 app.get('/api/auth-config', (_req: Request, res: Response) => {
@@ -36,7 +34,7 @@ app.get('/api/auth-config', (_req: Request, res: Response) => {
   });
 });
 
-// For any other requests, send back the index.html file from the dist directory
+
 app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, '../../dist/index.html'));
 });
